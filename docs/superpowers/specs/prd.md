@@ -110,6 +110,82 @@ Monthly recap
 P2
 Shared collections
 Public read-only link to a folder
+Deep-dive choice
+Proposal: go deep on search + MCP (most impressive for the effort), and ship a light version of the smart folder view alongside it.
+Option
+Demo impact
+Extra effort on top of P0
+Ship
+Search + MCP server
+High: "ask Claude to find my reel" works live
+~3–4 h (MCP is a thin layer over the search API)
+Full
+Smart folder view
+High: visible in the UI from the first screen
+Light version ~2–3 h; location and preferences add ~3 h
+Light: summary, subcategories, day-of-week and popularity picks. Location and preferences are stretch
+Smart folder view
+Opening a folder shows a summary and the 3–4 items worth acting on right now, so the user never scrolls through 50 reels.
+Folder page, top to bottom
+1. Summary header: "Recipes · 42 saves · 12 tried" plus a one-line AI summary ("Mostly high-protein veg breakfasts and quick dinners").
+2. Do this now: 3–4 picks chosen by the context rules below, each with a one-line reason ("It's Sunday, let's cook this").
+3. Subcategory chips: for example Breakfast · Desserts · High-protein · Street food.
+4. Rolled-up to-dos: action items from every item in the folder ("Buy paneer, oats, peanut butter").
+5. Full list, sorted by pick score.
+Subcategories. The classifier returns a subcategory per item. Once a folder has 8+ items, a background job sends all titles to OpenAI, gets back at most 6 subcategory names and reassigns items. The folder summary is cached on the folder document and regenerated after every 5 new saves.
+Context rules
+Signal
+Where it comes from
+Example
+Day and time
+Server clock in the user's timezone
+Sunday morning: "Let's cook this today" at the top of Recipes
+Popularity
+View, like and comment counts captured at save time (yt-dlp metadata, tweet stats)
+"2.1M views" badge; popular saves rank higher in their folder
+Location
+Browser geolocation (with permission) + places the AI extracts from saves, geocoded
+In Manali: "3 saved places near you" from Travel and Food. In Delhi: saved cafés nearby
+Preferences
+Profile set at onboarding (diet, fitness goal, home city), refined from saves
+Veg + muscle gain: high-protein veg recipes first in Fitness and Recipes, with "fits your protein goal"
+Neglect
+Save date, times opened, reminders ignored
+An unopened save from 2 months ago resurfaces once
+Pick score = context match + popularity (log of views, normalised per folder) + not yet done − times ignored. It's rule-based, so no extra AI call. A single small OpenAI call writes the "why now" line for the top picks only.
+Location details. For visit items the AI extracts place name and city. We geocode them with OpenStreetMap Nominatim (free, 1 request per second) or Google Geocoding and store a GeoJSON point with a 2dsphere index. A MongoDB $near query finds saves within 25 km. Without location permission we fall back to the home city.
+Honest limits. Counts are a snapshot at save time, so the badge says "popular", not "trending now". Instagram often hides likes, so every stat is optional. Preferences only re-rank the user's own saves; they don't invent new content.
+Search and MCP server
+Users can find any of 500+ saves in two places: the in-app search box, and any AI assistant (Claude Desktop, ChatGPT, Cursor) through a Stashd MCP server.
+Search engine (shared by both)
+1. A small OpenAI call turns the question into filters + a clean query: "cooking reel I shared last month" → { folder: "Recipes", platform: "instagram", from: "2026-09-30", query: "cooking" }.
+2. Two searches run in parallel on MongoDB Atlas: Atlas Search (full text over title, caption, transcript, tags) and Atlas Vector Search (query embedding vs item embeddings).
+3. Results are merged with reciprocal rank fusion and the top 10 returned with title, summary, URL, folder and save date.
+MCP server
+Built in TypeScript with the official @modelcontextprotocol/sdk, served by the same API at /mcp over Streamable HTTP. Each user generates a personal access token in Settings and pastes it into their assistant's connector config.
+Tool
+Input
+Returns
+search_saves
+query, folder?, platform?, limit?
+Matching items: title, summary, URL, folder, saved date
+get_save
+id
+Full item with transcript and action items
+list_folders
+none
+Folders with counts and AI summaries
+save_link
+url
+New item (processing starts)
+set_reminder
+id, when
+Confirmation with the reminder time
+complete_action
+id, actionIndex
+Updated item
+Demo line: in Claude Desktop, "I saved a paneer reel last month, find it and add the ingredients to my to-dos" → Claude calls search_saves, then get_save, then complete_action/to-do updates, and the change appears live in the web app.
+Effort. About 1 hour for the MCP layer once /api/search exists, about 2–3 hours for hybrid search itself. The in-app "Ask my saves" chat reuses the same search function.
 System architecture
 Four parts we build (React PWA, TypeScript API, TypeScript worker, MongoDB Atlas) plus external services; OpenAI handles transcription, categorisation and embeddings.
 The API only saves and queues, so the user sees "Saved" in under a second. The worker takes the job from MongoDB, calls the external services, writes the result back and tells the app over SSE.
@@ -166,10 +242,12 @@ Classification. One call to a small OpenAI model (for example gpt-4o-mini) with 
   "title": "5-minute high-protein paneer bhurji",
   "summary": "Quick veg breakfast with 30 g protein...",
   "category": "Recipes",
+  "subcategory": "Breakfast",
   "isNewCategory": false,
   "tags": ["cooking", "high-protein", "veg"],
   "intent": "try",
   "actionItems": ["Buy paneer", "Cook this weekend"],
+  "places": [],
   "remindAt": "next_weekend",
   "confidence": 0.86
 }
@@ -225,16 +303,23 @@ Example items document
   "urlHash": "sha1:ab12...",
   "platform": "instagram",
   "status": "ready",
-  "source": { "author": "@chefabc", "caption": "...", "durationSec": 48, "thumbnailUrl": "https://res.cloudinary.com/..." },
+  "source": {
+    "author": "@chefabc", "caption": "...", "durationSec": 48,
+    "thumbnailUrl": "https://res.cloudinary.com/...",
+    "stats": { "views": 2100000, "likes": 84000, "comments": 1200, "capturedAt": "2026-10-31T10:12:00Z" }
+  },
   "transcript": { "text": "...", "language": "hi" },
-  "ai": { "title": "...", "summary": "...", "tags": ["cooking"], "intent": "try", "confidence": 0.86 },
+  "ai": { "title": "...", "summary": "...", "subcategory": "Breakfast", "tags": ["cooking"], "intent": "try", "confidence": 0.86 },
+  "places": [{ "name": "Cafe 1947", "city": "Manali", "geo": { "type": "Point", "coordinates": [77.18, 32.24] } }],
   "folderId": "671f...",
   "actionItems": [{ "text": "Buy paneer", "done": false }],
   "reminder": { "remindAt": "2026-11-07T04:00:00Z", "snoozeCount": 0, "ignoredCount": 0 },
+  "openedCount": 0,
   "embedding": [0.012, -0.08, "..."],
   "error": null,
   "createdAt": "2026-10-31T10:12:00Z"
 }
+New indexes for the smart folder view: 2dsphere on places.geo, and { folderId, ai.subcategory }. Users get a profile object (diet, fitnessGoal, homeCity) and folders get a cached summary. MongoDB's built-in geospatial queries are one more reason it fits this product.
 We store text, metadata and our own thumbnail copy only, never the video file.
 API design
 REST over Express (or Fastify) in TypeScript, validated with Zod. All routes need auth except the share-target entry, which redirects to login when there is no session.
@@ -278,6 +363,7 @@ POST
 /api/telegram/webhook
 (P2) Bot receives forwarded links
 Live updates. The client opens one Server-Sent Events stream (/api/events) and the worker publishes item.updated when processing finishes, so the card fills in without a refresh. Polling every 2 s is the fallback.
+Added for the deep dives: GET /api/search?q= (hybrid search, used by the app, Ask and MCP), GET /api/folders/:id/overview (summary, subcategories, Do-this-now picks; accepts lat/lng), GET /api/nearby?lat=&lng= (saved places within 25 km), PUT /api/me/profile (diet, fitness goal, home city), POST /api/tokens (personal access token for MCP) and POST /mcp (MCP endpoint).
 Edge cases and failure handling
 The rule: a saved link is never lost. Any failure leaves the URL saved with a clear status and a retry.
 Case
@@ -388,6 +474,10 @@ TypeScript worker is faster than writing fresh:
   `/audio/transcriptions`-compatible endpoint. Point this at OpenAI directly (`whisper-1` or
   `gpt-4o-mini-transcribe` per the PRD) rather than Prism's non-OpenAI-only provider
   constraint, since this project's classification step is already OpenAI-based.
+  **Update 31 Oct 2026**: superseded by the Groq switch below — transcription now runs on
+  Groq (`whisper-large-v3-turbo`) via the same OpenAI-compatible adapter pattern, matching
+  `prism-api`'s actual production config (`TRANSCRIBE_API_KEY`/`TRANSCRIBE_BASE_URL` point at
+  Groq there, not OpenAI) rather than OpenAI's own Whisper endpoint.
 - **Host allow-listing** (`validateHost`/`allowedHosts`) — pins extraction to each
   platform's known domains, preventing the ingestion endpoint from becoming an open
   URL-fetch proxy for arbitrary links.
