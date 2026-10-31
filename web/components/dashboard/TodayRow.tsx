@@ -1,6 +1,4 @@
-import Link from "next/link";
-import { FOLDER_DOT } from "@/lib/data";
-import { saveHref } from "@/lib/folders";
+import { dotFor } from "@/lib/data";
 import type { SaveItem } from "@/lib/types";
 import { Button } from "@/components/ui/primitives";
 
@@ -36,7 +34,7 @@ export function TodayRow({ items, showEmpty, onDone, onSnooze }: Props) {
               <span
                 aria-hidden="true"
                 className="absolute top-4 bottom-4 left-3.5 w-1 rounded-full"
-                style={{ background: FOLDER_DOT[item.folder] }}
+                style={{ background: dotFor(item.folder) }}
               />
               <p className="font-mono text-xs text-ember-text">
                 {item.intent.toUpperCase()} · {item.remind}

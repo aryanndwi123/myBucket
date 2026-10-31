@@ -1,5 +1,8 @@
+"use client";
+
+import { AuthGate } from "@/components/auth/AuthGate";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 
 export default function Page() {
-  return <Dashboard view="today" />;
+  return <AuthGate>{(user) => <Dashboard username={user.username} />}</AuthGate>;
 }

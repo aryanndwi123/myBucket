@@ -62,15 +62,15 @@ export function FolderPage({ folder }: { folder: ContentFolder }) {
         </div>
       </header>
 
-      <div className="mt-10 grid gap-8 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
-        <section aria-labelledby="subs-heading">
+      <div className="mt-10 grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+        <section aria-labelledby="subs-heading" className="min-w-0">
           <div className="flex items-baseline justify-between gap-4">
             <h2 id="subs-heading" className="font-serif text-4xl leading-none">
               Topics in {folder}
             </h2>
             <Eyebrow className="shrink-0 text-xs tracking-[0.12em]">{groups.length} topics</Eyebrow>
           </div>
-          <div className="mt-5 grid items-start gap-5 md:grid-cols-2">
+          <div className="mt-5 grid grid-cols-1 items-start gap-5 md:grid-cols-2">
             {groups.map((g) => (
               <SubCard key={g.sub || "unsorted"} folder={folder} sub={g.sub} saves={g.saves} ideas={g.sub ? (SUGGESTIONS[folder][g.sub] ?? []) : []} />
             ))}

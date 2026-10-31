@@ -1,7 +1,6 @@
 import Link from "next/link";
 import type { AskState } from "@/hooks/useSaves";
-import { FOLDER_DOT } from "@/lib/data";
-import { saveHref } from "@/lib/folders";
+import { dotFor } from "@/lib/data";
 import type { SaveItem } from "@/lib/types";
 import { Eyebrow, Spinner } from "@/components/ui/primitives";
 
@@ -46,8 +45,13 @@ export function AskAnswer({ state, items }: Props) {
                       {item.folder} · saved {item.saved}
                     </span>
                   </span>
+<<<<<<< HEAD
                   <span className="size-2.5 shrink-0 rounded-full" style={{ background: FOLDER_DOT[item.folder] }} />
                 </Link>
+=======
+                  <span className="size-2.5 shrink-0 rounded-full" style={{ background: dotFor(item.folder) }} />
+                </button>
+>>>>>>> c2d9ecc6e9e30d2816a5139f627a83387a5537c0
               </li>
             ))}
           </ol>

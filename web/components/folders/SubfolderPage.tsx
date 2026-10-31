@@ -95,7 +95,7 @@ export function SubfolderPage({ folder, sub }: Props) {
             Nothing saved in {label} yet. Paste a link and Stashd files it here when it fits.{ideas.length > 0 && " The ideas below are a good place to start."}
           </p>
         ) : (
-          <div className="mt-4 grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+          <div className="mt-4 grid grid-cols-1 gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
             <div>
               <p className="text-lg leading-relaxed text-ink-2">{d.overview}</p>
               {d.tags.length > 0 && (
@@ -128,7 +128,7 @@ export function SubfolderPage({ folder, sub }: Props) {
         )}
       </section>
 
-      <div className="mt-10 grid gap-8 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+      <div className="mt-10 grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
         <section aria-labelledby="saves-heading" className="min-w-0">
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
             <h2 id="saves-heading" className="font-serif text-4xl leading-none">

@@ -3,9 +3,8 @@
 export type Platform = "instagram" | "x" | "linkedin" | "youtube" | "web";
 export type ItemStatus = "processing" | "ready" | "review" | "unavailable";
 export type Intent = "Learn" | "Try" | "Buy" | "Visit" | "Apply" | "Watch" | "Inspire" | "Read";
-export type FolderName = "Recipes" | "Coding" | "Career" | "Fitness" | "Travel" | "Tools" | "Inbox";
-/** The fixed categories. Inbox is the catch-all and has no subcategories. */
-export type ContentFolder = Exclude<FolderName, "Inbox">;
+/** Folder names are dynamic — the AI classifier creates them from the user's own saves. */
+export type FolderName = string;
 
 export interface ActionItem {
   text: string;
