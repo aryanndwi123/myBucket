@@ -150,5 +150,5 @@ export function useSaves() {
     setAsk({ mode: "idle" });
   }, []);
 
-  return { items, toast, ask, saveLink, markDone, snooze, archive, moveTo, toggleAction, askQuestion, clearAsk };
+  return { items, toast, ask, say, saveLink, markDone, snooze, archive, moveTo, toggleAction, askQuestion, clearAsk };
 }
