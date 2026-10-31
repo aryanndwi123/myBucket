@@ -1,28 +1,25 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+"use client";
+
+import { useParams } from "next/navigation";
+import { folderFromSlug } from "@/lib/folders";
+import { topicBySlug } from "@/lib/topics";
+import { useSavesContext } from "@/components/app/SavesProvider";
 import { SubfolderPage } from "@/components/folders/SubfolderPage";
-import { FOLDERS, FOLDER_SUBS } from "@/lib/data";
-import { folderFromSlug, slugify, subFromSlug } from "@/lib/folders";
+import { NotFoundState } from "@/components/ui/NotFoundState";
+import { PageSkeleton } from "@/components/ui/States";
 
-type Props = { params: Promise<{ folder: string; sub: string }> };
+export default function Page() {
+  const { folder: folderSlug, sub } = useParams<{ folder: string; sub: string }>();
+  const { items, folders, state } = useSavesContext();
 
-export const dynamicParams = false;
+  if (state === "loading" && folders.length === 0) return <PageSkeleton />;
 
-export function generateStaticParams() {
-  return FOLDERS.flatMap((f) => [...FOLDER_SUBS[f].map(slugify), "unsorted"].map((sub) => ({ folder: slugify(f), sub })));
-}
+  const folder = folderFromSlug(folders, folderSlug);
+  if (!folder) return <NotFoundState />;
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { folder: folderSlug, sub: subSlug } = await params;
-  const folder = folderFromSlug(folderSlug);
-  const sub = folder ? subFromSlug(folder, subSlug) : null;
-  return { title: folder && sub !== null ? `${sub || "Unsorted"} · ${folder}` : "Not found" };
-}
+  const saves = items.filter((x) => x.folders.includes(folder.name));
+  const topic = topicBySlug(saves, sub);
+  if (!topic) return <NotFoundState />;
 
-export default async function Page({ params }: Props) {
-  const { folder: folderSlug, sub: subSlug } = await params;
-  const folder = folderFromSlug(folderSlug);
-  const sub = folder ? subFromSlug(folder, subSlug) : null;
-  if (!folder || sub === null) notFound();
-  return <SubfolderPage folder={folder} sub={sub} />;
+  return <SubfolderPage folder={folder} topic={topic} />;
 }

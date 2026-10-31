@@ -1,10 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { FOLDERS, FOLDER_SUBS, FOLDER_TINT } from "@/lib/data";
-import { folderHref, inSub, subHref } from "@/lib/folders";
+import { tintFor } from "@/lib/data";
+import { folderHref } from "@/lib/folders";
 import type { SaveItem } from "@/lib/types";
 import { kindLabel, newestFirst } from "@/lib/utils";
 import { useSavesContext } from "@/components/app/SavesProvider";
@@ -19,66 +17,8 @@ const card = "rounded-3xl border border-line bg-card p-5";
 /** Say how sure the AI was, so moving a save feels like teaching, not fixing. */
 function folderNote(item: SaveItem) {
   if (item.confidence === "you picked") return "You picked this one. Stashd will remember.";
-  if (item.folder === "Inbox") return `Not sure about this one (${item.confidence}). Pick where it belongs.`;
+  if (item.folder === "Inbox" || !item.folder) return `Not sure about this one${item.confidence ? ` (${item.confidence})` : ""}. Pick where it belongs.`;
   return `AI picked, ${item.confidence} sure. Wrong? One click, and Stashd learns from it.`;
-}
-
-function ReminderCard({ item, onDone, onSnooze }: { item: SaveItem; onDone: () => void; onSnooze: () => void }) {
-  const hasReminder = item.remind !== "" && item.remind !== "No reminder yet";
-
-  return (
-    <section aria-label="Reminder" className="rounded-3xl bg-ink p-5 text-on-ink">
-      {item.finished ? (
-        <p className="font-semibold">Marked done. Nice one.</p>
-      ) : hasReminder ? (
-        <>
-          <Eyebrow className="text-ember-soft">Reminder</Eyebrow>
-          <p className="mt-1.5 text-[19px] font-semibold">{item.remind}</p>
-          <p className="mt-1 text-sm leading-snug text-on-ink-muted">{item.why}</p>
-          <div className="mt-4 flex gap-2">
-            <Button variant="light" size="sm" onClick={onDone}>
-              Done
-            </Button>
-            <Button variant="dark-outline" size="sm" onClick={onSnooze}>
-              Snooze a day
-            </Button>
-          </div>
-        </>
-      ) : (
-        <>
-          <p className="font-semibold">No reminder yet</p>
-          <p className="mt-1 text-sm text-on-ink-muted">{item.why}</p>
-        </>
-      )}
-    </section>
-  );
-}
-
-function Transcript({ item }: { item: SaveItem }) {
-  const hasTranslation = !!item.transcriptEn && item.transcriptEn !== item.transcript;
-  const [showEnglish, setShowEnglish] = useState(false);
-
-  return (
-    <section aria-labelledby="transcript-heading">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 id="transcript-heading" className="font-serif text-3xl leading-none">
-          Transcript
-        </h2>
-        {hasTranslation && (
-          <div role="group" aria-label="Transcript language" className="flex gap-2">
-            <Chip selected={!showEnglish} onClick={() => setShowEnglish(false)}>
-              Original
-            </Chip>
-            <Chip selected={showEnglish} onClick={() => setShowEnglish(true)}>
-              English
-            </Chip>
-          </div>
-        )}
-      </div>
-      <p className="mt-1 text-sm text-ink-3">{item.language}</p>
-      <p className="mt-3 max-w-prose text-[16px] leading-relaxed">{showEnglish && hasTranslation ? item.transcriptEn : item.transcript}</p>
-    </section>
-  );
 }
 
 function StateMessage({ title, body, children }: { title: string; body: string; children?: React.ReactNode }) {
@@ -91,72 +31,54 @@ function StateMessage({ title, body, children }: { title: string; body: string; 
   );
 }
 
-/** A single save, full page. Replaces the old side panel. */
+/** A single save, full page. */
 export function SaveDetail({ id }: { id: string }) {
-  const { items, toggleAction, moveTo, moveToSub, markDone, snooze, archive, restore } = useSavesContext();
+  const { items, folders, toggleAction, toggleFolder, retry, remove } = useSavesContext();
   const router = useRouter();
   const item = items.find((x) => x.id === id);
 
   if (!item) {
     return (
-      <StateMessage title="Save not found" body="It may have been removed, or the link is wrong. Saves added in this demo reset when you refresh the page.">
+      <StateMessage title="Save not found" body="It may have been removed, or the link is wrong.">
         <LinkButton href="/all">All saves</LinkButton>
-      </StateMessage>
-    );
-  }
-
-  const category = item.folder && item.folder !== "Inbox" ? item.folder : null;
-  const parentHref = category ? (item.subcategory ? subHref(category, item.subcategory) : folderHref(category)) : item.folder === "Inbox" ? "/inbox" : "/";
-
-  if (item.archived) {
-    return (
-      <StateMessage title="Archived" body={`“${item.title}” is out of your way. Restore it any time.`}>
-        <Button onClick={() => restore(item.id)}>Restore</Button>
-        <LinkButton href={parentHref} variant="outline">
-          Back
-        </LinkButton>
       </StateMessage>
     );
   }
 
   const processing = item.status === "processing";
   const review = item.status === "review";
-  const subs = category ? FOLDER_SUBS[category] : [];
+  const failed = item.status === "unavailable";
   const doneCount = item.actions.filter((a) => a.done).length;
+  const realFolders = folders.filter((f) => !f.isInbox);
+  const primaryHref = item.folder ? folderHref(item.folder) : "/";
 
   const trail: Crumb[] = [{ label: "Saves", href: "/" }];
-  if (category) {
-    trail.push({ label: category, href: folderHref(category) });
-    if (item.subcategory) trail.push({ label: item.subcategory, href: subHref(category, item.subcategory) });
-  } else if (item.folder === "Inbox") {
-    trail.push({ label: "Inbox", href: "/inbox" });
-  }
+  if (item.folder && item.folder !== "Inbox") trail.push({ label: item.folder, href: folderHref(item.folder) });
+  else if (item.folders.includes("Inbox")) trail.push({ label: "Inbox", href: "/inbox" });
   trail.push({ label: processing ? "Saving…" : item.title });
 
-  const related = category
-    ? inSub(
-        items.filter((x) => !x.archived && x.status !== "processing" && x.id !== item.id),
-        category,
-        item.subcategory,
-      )
+  const related = item.folder
+    ? items
+        .filter((x) => x.id !== item.id && x.status !== "processing" && x.folders.includes(item.folder))
         .sort(newestFirst)
         .slice(0, 3)
     : [];
 
-  const onArchive = () => {
-    archive(item.id);
-    router.push(parentHref);
+  const onDelete = async () => {
+    const ok = await remove(item.id);
+    if (ok) router.push(primaryHref);
   };
 
   return (
     <>
       <Breadcrumb trail={trail} />
 
-      <header className="mt-1 rounded-[28px] p-6 sm:p-10" style={{ background: processing || !item.folder ? "var(--color-sunken)" : FOLDER_TINT[item.folder] }}>
+      <header className="mt-1 rounded-[28px] p-6 sm:p-10" style={{ background: processing || !item.folder ? "var(--color-sunken)" : tintFor(item.folder) }}>
         <div className="flex flex-wrap items-center gap-2">
           <span className={badge}>{kindLabel(item)}</span>
           {item.intent && <span className={badge}>{item.intent}</span>}
           {review && <span className="rounded-md bg-ember-tint px-2 py-1 text-[11px] leading-none font-medium text-ember-text">Needs a look</span>}
+          {failed && <span className="rounded-md bg-ember-tint px-2 py-1 text-[11px] leading-none font-medium text-ember-text">Couldn’t read</span>}
         </div>
 
         {processing ? (
@@ -175,13 +97,18 @@ export function SaveDetail({ id }: { id: string }) {
         )}
       </header>
 
-      {!processing && (
+      {failed && (
+        <section className="mt-8 rounded-3xl border border-ember-tint bg-ember-tint/40 p-5">
+          <p className="font-medium text-ember-text">{item.error ?? "We couldn’t read this link."}</p>
+          <Button variant="outline" size="sm" className="mt-3" onClick={() => retry(item.id)}>
+            Try again
+          </Button>
+        </section>
+      )}
+
+      {!processing && !failed && (
         <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-start">
           <div className="flex min-w-0 flex-col gap-10">
-            <div className="lg:hidden">
-              <ReminderCard item={item} onDone={() => markDone(item.id)} onSnooze={() => snooze(item.id)} />
-            </div>
-
             <section aria-labelledby="summary-heading">
               <h2 id="summary-heading" className="font-serif text-3xl leading-none">
                 Summary
@@ -219,65 +146,52 @@ export function SaveDetail({ id }: { id: string }) {
               </section>
             )}
 
-            <Transcript key={item.id} item={item} />
+            {item.text && (
+              <section aria-labelledby="text-heading">
+                <h2 id="text-heading" className="font-serif text-3xl leading-none">
+                  {item.textSource === "audio" ? "Transcript" : "Post text"}
+                </h2>
+                <p className="mt-3 max-w-prose text-[16px] leading-relaxed">{item.text}</p>
+              </section>
+            )}
           </div>
 
           <aside aria-label="Actions" className="flex flex-col gap-4 lg:sticky lg:top-6">
-            <div className="hidden lg:block">
-              <ReminderCard item={item} onDone={() => markDone(item.id)} onSnooze={() => snooze(item.id)} />
-            </div>
-
             <section aria-labelledby="filing-heading" className={card}>
               <h2 id="filing-heading" className="font-serif text-2xl leading-none">
                 Filed in
               </h2>
               <p className="mt-2 text-sm leading-snug text-ink-3">{folderNote(item)}</p>
 
-              <Eyebrow className="mt-4">Category</Eyebrow>
-              <div role="group" aria-label="Category" className="mt-2 flex flex-wrap gap-2">
-                {FOLDERS.map((name) => (
-                  <Chip key={name} selected={item.folder === name} onClick={() => moveTo(item.id, name)}>
-                    {name}
+              <Eyebrow className="mt-4">Folders</Eyebrow>
+              <div role="group" aria-label="Folders" className="mt-2 flex flex-wrap gap-2">
+                {realFolders.map((f) => (
+                  <Chip key={f.id} selected={item.folders.includes(f.name)} onClick={() => toggleFolder(item.id, f.name)}>
+                    {f.name}
                   </Chip>
                 ))}
               </div>
-
-              {subs.length > 0 && (
-                <>
-                  <Eyebrow className="mt-4">Topic{item.subcategory ? "" : " · not set"}</Eyebrow>
-                  <div role="group" aria-label="Topic" className="mt-2 flex flex-wrap gap-2">
-                    {subs.map((name) => (
-                      <Chip key={name} selected={item.subcategory === name} onClick={() => moveToSub(item.id, name)}>
-                        {name}
-                      </Chip>
-                    ))}
-                  </div>
-                </>
-              )}
             </section>
 
             <section aria-label="Source" className={`${card} flex flex-col gap-2`}>
-              <a href={`https://${item.key}`} target="_blank" rel="noopener noreferrer" className={buttonClass("outline", "md", "w-full")}>
+              <a href={item.url} target="_blank" rel="noopener noreferrer" className={buttonClass("outline", "md", "w-full")}>
                 Open original <ArrowUpRightIcon className="size-4" />
                 <span className="sr-only">(opens in a new tab)</span>
               </a>
-              <Button variant="ghost" onClick={onArchive} className="w-full">
-                Archive
+              <Button variant="ghost" onClick={onDelete} className="w-full">
+                Delete
               </Button>
             </section>
           </aside>
         </div>
       )}
 
-      {related.length > 0 && category && (
+      {related.length > 0 && (
         <section aria-labelledby="related-heading" className="mt-14">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
             <h2 id="related-heading" className="font-serif text-4xl leading-none">
-              More in {item.subcategory || category}
+              More in {item.folder}
             </h2>
-            <Link href={parentHref} className="inline-flex min-h-11 items-center text-sm font-medium text-ink-3 hover:text-ink hover:underline">
-              See all
-            </Link>
           </div>
           <ul className="mt-4 grid grid-cols-[repeat(auto-fill,minmax(250px,1fr))] gap-4">
             {related.map((s) => (

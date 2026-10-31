@@ -1,25 +1,21 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+"use client";
+
+import { useParams } from "next/navigation";
+import { folderFromSlug } from "@/lib/folders";
+import { useSavesContext } from "@/components/app/SavesProvider";
 import { FolderPage } from "@/components/folders/FolderPage";
-import { FOLDERS } from "@/lib/data";
-import { folderFromSlug, slugify } from "@/lib/folders";
+import { NotFoundState } from "@/components/ui/NotFoundState";
+import { PageSkeleton } from "@/components/ui/States";
 
-type Props = { params: Promise<{ folder: string }> };
+/** Folders are loaded at runtime (per user), so this resolves the slug against the live list instead of a static map. */
+export default function Page() {
+  const { folder: slug } = useParams<{ folder: string }>();
+  const { folders, state } = useSavesContext();
 
-// Categories are a fixed list, so every valid page is built ahead of time and anything else is a 404.
-export const dynamicParams = false;
+  if (state === "loading" && folders.length === 0) return <PageSkeleton />;
 
-export function generateStaticParams() {
-  return FOLDERS.map((f) => ({ folder: slugify(f) }));
-}
+  const folder = folderFromSlug(folders, slug);
+  if (!folder) return <NotFoundState />;
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const folder = folderFromSlug((await params).folder);
-  return { title: folder ?? "Not found" };
-}
-
-export default async function Page({ params }: Props) {
-  const folder = folderFromSlug((await params).folder);
-  if (!folder) notFound();
   return <FolderPage folder={folder} />;
 }
