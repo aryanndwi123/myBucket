@@ -2,6 +2,11 @@
 
 Date: 2026-10-31
 
+> **Superseded by `prd.md`.** The team's PRD (added 31 Oct 2026) is now the source of truth
+> for stack, auth, and processing architecture (Google sign-in, async Agenda.js worker,
+> React PWA). This doc's folder-cap logic and Prism-reuse notes were merged into `prd.md`'s
+> addendum section. Kept here for historical context only.
+
 ## Idea
 
 A unified bucket for saved social content (Instagram Reels, Twitter/X posts). Instead of

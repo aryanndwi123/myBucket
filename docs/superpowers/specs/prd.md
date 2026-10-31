@@ -358,3 +358,36 @@ oEmbed as backup; paste-text fallback
 Running out of OpenAI credit
 Small models, audio compression, daily cap
 Open question: which hosting will the team use for the worker (Railway, Render or a VPS)?
+
+Addendum — folder cap and Prism code reuse (from the superpowers design spec, 31 Oct 2026)
+
+Folder cap. Each user gets at most 8 non-auto folders plus exactly one catch-all folder,
+created lazily the first time it's needed (the low-confidence Inbox above can serve this
+role rather than adding a second catch-all). The classification prompt sends the user's
+existing folder names (and, per the PRD above, their last 5 corrections) and:
+- returns the name of any folder that clears the match threshold — an item is allowed to
+  match more than one folder, so `folderId` becomes `folderIds: ObjectId[]` on the items
+  document rather than a single reference
+- proposes a new folder (`isNewCategory: true` as already specified) only while the user is
+  under the 8-folder cap
+- once a user is at the cap and nothing clears the threshold, routes to Inbox instead of
+  creating a 9th real folder
+
+Prism code reuse. `prism-api`'s `modules/social` already implements working, battle-tested
+versions of three pieces this PRD's processing pipeline needs — porting these from Go to the
+TypeScript worker is faster than writing fresh:
+- **Caption/oEmbed extraction** (`application/service.go: ExtractPostText`) — fetch oEmbed
+  HTML per platform, strip the `<p>` body down to plain text. Matches the "Tweet text" /
+  caption column in the extraction table above.
+- **yt-dlp download adapter** (`adapters/output/ytdlp/downloader.go`) — shells out to the
+  `yt-dlp` binary (`-f ba/b` for audio-only), writes to a temp dir, globs the produced file,
+  returns a path + cleanup func; `--max-filesize` and `--fixup never` avoid needing ffmpeg
+  for the download step itself (this PRD still wants `ffmpeg-static` for the mono-MP3
+  compression step, which is a separate concern from the download).
+- **Whisper transcription adapter** (`adapters/output/whisper/transcriber.go`) — wraps an
+  `/audio/transcriptions`-compatible endpoint. Point this at OpenAI directly (`whisper-1` or
+  `gpt-4o-mini-transcribe` per the PRD) rather than Prism's non-OpenAI-only provider
+  constraint, since this project's classification step is already OpenAI-based.
+- **Host allow-listing** (`validateHost`/`allowedHosts`) — pins extraction to each
+  platform's known domains, preventing the ingestion endpoint from becoming an open
+  URL-fetch proxy for arbitrary links.
