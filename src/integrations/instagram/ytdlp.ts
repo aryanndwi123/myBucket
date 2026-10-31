@@ -123,6 +123,9 @@ export async function downloadAudio(
 
 // classifyYtDlpError names the common failure modes so logs stay readable.
 function classifyYtDlpError(err: unknown): string {
+  if (err && typeof err === "object" && "code" in err && (err as { code?: unknown }).code === "ENOENT") {
+    return `yt-dlp binary not found at YTDLP_PATH (${env.YTDLP_PATH})`;
+  }
   const stderr =
     err && typeof err === "object" && "stderr" in err
       ? String((err as { stderr?: unknown }).stderr ?? "")
