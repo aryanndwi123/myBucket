@@ -1,0 +1,46 @@
+<svg width="1200" height="380" viewBox="0 0 1200 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="myBucket">
+  <defs>
+    <linearGradient id="paperGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F6F1E8"/>
+      <stop offset="1" stop-color="#EEE6D8"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#1F1A15" flood-opacity="0.08"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="380" fill="url(#paperGrad)"/>
+
+  <!-- scattered folder tiles, tilted, like saved cards spilling into a bucket -->
+  <g filter="url(#soft)">
+    <rect x="845" y="55" width="150" height="112" rx="14" fill="#FFFDF9" stroke="#E3D8C6" stroke-width="2" transform="rotate(-7 920 111)"/>
+    <rect x="955" y="150" width="150" height="112" rx="14" fill="#FBE2D0" stroke="#D6C8B2" stroke-width="2" transform="rotate(5 1030 206)"/>
+    <rect x="800" y="190" width="150" height="112" rx="14" fill="#FFFDF9" stroke="#E3D8C6" stroke-width="2" transform="rotate(10 875 246)"/>
+    <rect x="1000" y="40" width="130" height="98" rx="14" fill="#C94F1C" transform="rotate(-4 1065 89)"/>
+  </g>
+
+  <!-- marks on the ember card suggesting a feed snippet -->
+  <g transform="rotate(-4 1065 89)" opacity="0.92">
+    <circle cx="1030" cy="68" r="7" fill="#F6F1E8"/>
+    <rect x="1044" y="63" width="52" height="7" rx="3.5" fill="#F6F1E8"/>
+    <rect x="1030" y="88" width="84" height="6" rx="3" fill="#FBE2D0"/>
+    <rect x="1030" y="102" width="60" height="6" rx="3" fill="#FBE2D0"/>
+  </g>
+
+  <!-- wordmark -->
+  <text x="80" y="185" font-family="Georgia, 'Times New Roman', serif" font-style="italic" font-size="92" fill="#1F1A15">my<tspan fill="#C94F1C">Bucket</tspan></text>
+
+  <!-- tagline -->
+  <text x="82" y="228" font-family="Helvetica, Arial, sans-serif" font-size="21" fill="#574C42">Everything you save on Instagram and X, sorted into folders it discovers on its own.</text>
+
+  <!-- mono meta row -->
+  <g font-family="'SF Mono', 'Courier New', monospace" font-size="14" fill="#6E6359" letter-spacing="1.5">
+    <text x="82" y="270" text-transform="uppercase">SAVE</text>
+    <circle cx="140" cy="266" r="2.5" fill="#D6C8B2"/>
+    <text x="155" y="270">CLASSIFY</text>
+    <circle cx="245" cy="266" r="2.5" fill="#D6C8B2"/>
+    <text x="260" y="270">SEARCH VIA MCP</text>
+  </g>
+
+  <rect x="80" y="296" width="420" height="1" fill="#D6C8B2"/>
+</svg>

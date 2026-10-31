@@ -1,0 +1,43 @@
+<svg width="1100" height="260" viewBox="0 0 1100 260" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Save to classified flow">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#C94F1C"/>
+    </marker>
+  </defs>
+  <rect width="1100" height="260" fill="#F6F1E8"/>
+
+  <!-- step card template -->
+  <g font-family="Helvetica, Arial, sans-serif">
+
+    <!-- 1 paste link -->
+    <rect x="30" y="80" width="190" height="100" rx="14" fill="#FFFDF9" stroke="#E3D8C6" stroke-width="2"/>
+    <text x="50" y="112" font-family="'SF Mono', 'Courier New', monospace" font-size="12" fill="#A8421A" letter-spacing="1.5">01 · PASTE</text>
+    <text x="50" y="140" font-size="16" fill="#1F1A15">reel or tweet URL</text>
+    <text x="50" y="160" font-size="12" fill="#6E6359">instagram.com/reel/...</text>
+
+    <path d="M225 130 H270" stroke="#C94F1C" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <!-- 2 extract -->
+    <rect x="280" y="80" width="190" height="100" rx="14" fill="#FFFDF9" stroke="#E3D8C6" stroke-width="2"/>
+    <text x="300" y="112" font-family="'SF Mono', 'Courier New', monospace" font-size="12" fill="#A8421A" letter-spacing="1.5">02 · EXTRACT</text>
+    <text x="300" y="140" font-size="16" fill="#1F1A15">yt-dlp + transcript</text>
+    <text x="300" y="160" font-size="12" fill="#6E6359">caption, audio, author</text>
+
+    <path d="M475 130 H520" stroke="#C94F1C" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <!-- 3 classify -->
+    <rect x="530" y="80" width="190" height="100" rx="14" fill="#FBE2D0" stroke="#D6C8B2" stroke-width="2"/>
+    <text x="550" y="112" font-family="'SF Mono', 'Courier New', monospace" font-size="12" fill="#A8421A" letter-spacing="1.5">03 · CLASSIFY</text>
+    <text x="550" y="140" font-size="16" fill="#1F1A15">OpenAI picks a folder</text>
+    <text x="550" y="160" font-size="12" fill="#6E6359">or proposes a new one</text>
+
+    <path d="M725 130 H770" stroke="#C94F1C" stroke-width="2" marker-end="url(#arrow)"/>
+
+    <!-- 4 ready -->
+    <rect x="780" y="80" width="190" height="100" rx="14" fill="#FFFDF9" stroke="#E3D8C6" stroke-width="2"/>
+    <text x="800" y="112" font-family="'SF Mono', 'Courier New', monospace" font-size="12" fill="#A8421A" letter-spacing="1.5">04 · READY</text>
+    <text x="800" y="140" font-size="16" fill="#1F1A15">tagged, summarised</text>
+    <text x="800" y="160" font-size="12" fill="#6E6359">+ action items checked off</text>
+
+  </g>
+</svg>
