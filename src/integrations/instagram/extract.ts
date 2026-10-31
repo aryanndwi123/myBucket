@@ -1,5 +1,8 @@
+import { promises as fs } from "node:fs";
+
 import { downloadAudio, fetchMetadata } from "./ytdlp";
 import { transcribeAudio } from "./transcribe";
+import { TranscriptionFailedError } from "./errors";
 import { validateInstagramUrl } from "./validate";
 
 export interface InstagramReelExtract {
@@ -23,6 +26,18 @@ export async function extractInstagramReel(reelUrl: string): Promise<InstagramRe
   let transcript: string;
   try {
     transcript = await transcribeAudio(audioPath);
+  } catch (err) {
+    // The downloaded file's size tells us whether yt-dlp actually got real
+    // media (Instagram sometimes serves cloud-host IPs a degraded/blocked
+    // response that still "succeeds" but contains no usable audio).
+    const size = await fs.stat(audioPath).then((s) => s.size).catch(() => -1);
+    const reason =
+      err instanceof TranscriptionFailedError
+        ? err.message.replace(/^transcription failed: /, "")
+        : err instanceof Error
+          ? err.message
+          : String(err);
+    throw new TranscriptionFailedError(`${reason} (downloaded file was ${size} bytes)`);
   } finally {
     await cleanup();
   }
