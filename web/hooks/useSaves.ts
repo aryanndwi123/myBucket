@@ -66,7 +66,7 @@ export function useSaves() {
     const key = canonicalKey(url);
     const dup = items.find((x) => x.key === key);
     if (dup) {
-      say(`Already saved on ${dup.savedOn}`, "Opened it on the right");
+      say(`Already saved on ${dup.savedOn}`, "Opening it now");
       return { duplicateOf: dup.id };
     }
     const platform = detectPlatform(key);
@@ -74,7 +74,7 @@ export function useSaves() {
     const id = `n${Date.now()}`;
     const pending: SaveItem = {
       id, key, platform, status: "processing", step: "Fetching caption…",
-      title: key, kind: result.kind, author: "", folder: "", tags: [], intent: "", summary: "",
+      title: key, kind: result.kind, author: "", folder: "", subcategory: "", tags: [], intent: "", summary: "",
       actions: [], remind: "", why: "", due: false, saved: "just now", savedOn: "today",
       language: "", confidence: "", transcript: "", transcriptEn: "",
     };
@@ -121,11 +121,25 @@ export function useSaves() {
     say("Archived", find(id)?.title);
   };
 
+  /** POST /api/items/:id/reminder { action: "restore" } */
+  const restore = (id: string) => {
+    patch(id, () => ({ archived: false }));
+    say("Restored", find(id)?.title);
+  };
+
   /** PATCH /api/items/:id { folder } — the server also logs a correction for the classifier. */
   const moveTo = (id: string, folder: FolderName) => {
     if (find(id)?.folder === folder) return;
-    patch(id, (x) => ({ folder, confidence: "you picked", status: x.status === "review" ? "ready" : x.status }));
+    // A subcategory only makes sense inside its own folder, so moving clears it.
+    patch(id, (x) => ({ folder, subcategory: "", confidence: "you picked", status: x.status === "review" ? "ready" : x.status }));
     say(`Moved to ${folder}`, "Stashd will learn from this");
+  };
+
+  /** PATCH /api/items/:id { subcategory } */
+  const moveToSub = (id: string, subcategory: string) => {
+    if (find(id)?.subcategory === subcategory) return;
+    patch(id, () => ({ subcategory, confidence: "you picked" }));
+    say(`Filed under ${subcategory}`, "Stashd will learn from this");
   };
 
   /** PATCH /api/items/:id { actionItems } */
@@ -150,5 +164,5 @@ export function useSaves() {
     setAsk({ mode: "idle" });
   }, []);
 
-  return { items, toast, ask, say, saveLink, markDone, snooze, archive, moveTo, toggleAction, askQuestion, clearAsk };
+  return { items, toast, ask, say, saveLink, markDone, snooze, archive, restore, moveTo, moveToSub, toggleAction, askQuestion, clearAsk };
 }

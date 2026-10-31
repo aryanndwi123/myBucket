@@ -57,7 +57,7 @@ export function matchesFilter(item: SaveItem, filter: TypeFilter): boolean {
 
 export function matchesQuery(item: SaveItem, q: string): boolean {
   if (!q) return true;
-  const hay = [item.title, item.summary, item.tags.join(" "), item.folder, item.author, item.transcript].join(" ").toLowerCase();
+  const hay = [item.title, item.summary, item.tags.join(" "), item.folder, item.subcategory, item.author, item.transcript].join(" ").toLowerCase();
   return hay.includes(q.toLowerCase());
 }
 
@@ -90,3 +90,17 @@ export function mockAsk(items: SaveItem[], question: string): string[] {
 export function kindLabel(item: SaveItem) {
   return item.length ? `${item.kind} · ${item.length}` : item.kind;
 }
+
+const UNIT_HOURS: Record<string, number> = { m: 1 / 60, h: 1, d: 24, w: 24 * 7 };
+
+/**
+ * Age in hours from the "7d ago" display label. A stand-in until the API returns `createdAt`;
+ * then sort on that and delete this.
+ */
+export function ageHours(saved: string): number {
+  const match = saved.match(/^(\d+)\s*([mhdw])/);
+  return match ? Number(match[1]) * UNIT_HOURS[match[2]] : 0;
+}
+
+export const newestFirst = (a: SaveItem, b: SaveItem) => ageHours(a.saved) - ageHours(b.saved);
+export const oldestFirst = (a: SaveItem, b: SaveItem) => ageHours(b.saved) - ageHours(a.saved);

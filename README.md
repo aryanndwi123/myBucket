@@ -16,6 +16,10 @@ Saved reels, tweets, and LinkedIn posts from all your platforms get pulled into 
 
 Early scaffold — project structure only, integrations not yet implemented.
 
+## Web dashboard
+
+The Next.js dashboard UI lives in [`web/`](web/README.md). It runs on mock data until the API exists: `cd web && npm install && npm run dev`.
+
 ## Setup
 
 ```bash

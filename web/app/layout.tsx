@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
+import { SavesProvider } from "@/components/app/SavesProvider";
 import "./globals.css";
 
 const instrumentSerif = Instrument_Serif({
@@ -12,14 +13,20 @@ const geist = Geist({ subsets: ["latin"], variable: "--font-geist" });
 const geistMono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
 
 export const metadata: Metadata = {
-  title: "Stashd",
+  title: { default: "Stashd", template: "%s · Stashd" },
   description: "We don't save links. We make sure you use them.",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#f6f1e8",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${instrumentSerif.variable} ${geist.variable} ${geistMono.variable}`}>
-      <body>{children}</body>
+      <body>
+        <SavesProvider>{children}</SavesProvider>
+      </body>
     </html>
   );
 }

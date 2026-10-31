@@ -4,6 +4,8 @@ export type Platform = "instagram" | "x" | "linkedin" | "youtube" | "web";
 export type ItemStatus = "processing" | "ready" | "review" | "unavailable";
 export type Intent = "Learn" | "Try" | "Buy" | "Visit" | "Apply" | "Watch" | "Inspire" | "Read";
 export type FolderName = "Recipes" | "Coding" | "Career" | "Fitness" | "Travel" | "Tools" | "Inbox";
+/** The fixed categories. Inbox is the catch-all and has no subcategories. */
+export type ContentFolder = Exclude<FolderName, "Inbox">;
 
 export interface ActionItem {
   text: string;
@@ -23,6 +25,8 @@ export interface SaveItem {
   length?: string; // "0:48"
   author: string;
   folder: FolderName | "";
+  /** One of FOLDER_SUBS[folder], or "" when the folder is Inbox or still processing. */
+  subcategory: string;
   tags: string[];
   intent: Intent | "";
   summary: string;

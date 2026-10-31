@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { FOLDER_DOT } from "@/lib/data";
+import { saveHref } from "@/lib/folders";
 import type { SaveItem } from "@/lib/types";
 import { Button } from "@/components/ui/primitives";
 
@@ -6,13 +8,12 @@ interface Props {
   items: SaveItem[];
   /** Empty-state copy only makes sense when no type filter is hiding items. */
   showEmpty: boolean;
-  onOpen: (id: string) => void;
   onDone: (id: string) => void;
   onSnooze: (id: string) => void;
 }
 
 /** Due reminders, capped at 3 a day. Each one is a single decision: Done or Tomorrow. */
-export function TodayRow({ items, showEmpty, onOpen, onDone, onSnooze }: Props) {
+export function TodayRow({ items, showEmpty, onDone, onSnooze }: Props) {
   if (items.length === 0 && !showEmpty) return null;
 
   return (
@@ -29,7 +30,7 @@ export function TodayRow({ items, showEmpty, onOpen, onDone, onSnooze }: Props) 
           You’re all caught up. Nothing is due today.
         </p>
       ) : (
-        <ul className="mt-4 grid grid-cols-[repeat(auto-fill,minmax(260px,300px))] gap-4">
+        <ul className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-[repeat(auto-fill,minmax(260px,300px))]">
           {items.map((item) => (
             <li key={item.id} className="relative flex animate-rise flex-col items-start rounded-3xl border border-line bg-card py-5 pr-5 pl-7">
               <span
@@ -40,13 +41,9 @@ export function TodayRow({ items, showEmpty, onOpen, onDone, onSnooze }: Props) 
               <p className="font-mono text-xs text-ember-text">
                 {item.intent.toUpperCase()} · {item.remind}
               </p>
-              <button
-                type="button"
-                onClick={() => onOpen(item.id)}
-                className="mt-2 text-left text-[17px] leading-snug font-semibold hover:underline"
-              >
+              <Link href={saveHref(item.id)} className="mt-2 text-left text-[17px] leading-snug font-semibold hover:underline">
                 {item.title}
-              </button>
+              </Link>
               <p className="mt-2 text-sm leading-snug text-ink-3">{item.why}</p>
               <div className="mt-auto flex gap-2 pt-4">
                 <Button size="sm" onClick={() => onDone(item.id)}>

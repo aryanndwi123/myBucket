@@ -1,16 +1,17 @@
+import Link from "next/link";
 import type { AskState } from "@/hooks/useSaves";
 import { FOLDER_DOT } from "@/lib/data";
+import { saveHref } from "@/lib/folders";
 import type { SaveItem } from "@/lib/types";
 import { Eyebrow, Spinner } from "@/components/ui/primitives";
 
 interface Props {
   state: AskState;
   items: SaveItem[];
-  onOpen: (id: string) => void;
 }
 
 /** Answer card for "ask" mode. The answer is built from keyword matches until POST /api/ask exists. */
-export function AskAnswer({ state, items, onOpen }: Props) {
+export function AskAnswer({ state, items }: Props) {
   if (state.mode === "idle") return null;
 
   const cited = state.mode === "done" ? state.ids.map((id) => items.find((x) => x.id === id)).filter((x): x is SaveItem => !!x) : [];
@@ -34,9 +35,8 @@ export function AskAnswer({ state, items, onOpen }: Props) {
           <ol className="mt-4 flex flex-col gap-2">
             {cited.map((item, i) => (
               <li key={item.id}>
-                <button
-                  type="button"
-                  onClick={() => onOpen(item.id)}
+                <Link
+                  href={saveHref(item.id)}
                   className="flex min-h-14 w-full items-center gap-4 rounded-2xl border border-line bg-paper px-4 py-2 text-left transition-colors hover:border-line-strong hover:bg-sunken"
                 >
                   <span className="grid size-7 shrink-0 place-items-center rounded-full bg-ink font-mono text-xs text-on-ink">{i + 1}</span>
@@ -47,7 +47,7 @@ export function AskAnswer({ state, items, onOpen }: Props) {
                     </span>
                   </span>
                   <span className="size-2.5 shrink-0 rounded-full" style={{ background: FOLDER_DOT[item.folder] }} />
-                </button>
+                </Link>
               </li>
             ))}
           </ol>

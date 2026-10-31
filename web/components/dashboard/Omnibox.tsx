@@ -38,6 +38,7 @@ export function Omnibox({ value, mode, inputRef, onChange, onSubmit }: Props) {
     >
       <Icon className={cn("size-5 shrink-0", mode === "idle" ? "text-ink-4" : "text-ink")} />
       <input
+        id="omnibox"
         ref={inputRef}
         value={value}
         onChange={(e) => onChange(e.target.value)}
