@@ -5,15 +5,16 @@ import OpenAI from "openai";
 import { env } from "../../config/env";
 import { TranscriptionFailedError } from "./errors";
 
-const client = new OpenAI({ apiKey: env.OPENAI_API_KEY });
+// Transcription runs on Groq's OpenAI-compatible API, not OpenAI directly.
+const client = new OpenAI({ apiKey: env.TRANSCRIBE_API_KEY, baseURL: env.TRANSCRIBE_BASE_URL });
 
-// transcribeAudio sends the downloaded audio file straight to OpenAI's
-// transcription endpoint and returns the spoken text.
+// transcribeAudio sends the downloaded audio file to the transcription
+// endpoint (Groq) and returns the spoken text.
 export async function transcribeAudio(audioPath: string): Promise<string> {
   try {
     const response = await client.audio.transcriptions.create({
       file: createReadStream(audioPath),
-      model: env.OPENAI_TRANSCRIBE_MODEL,
+      model: env.TRANSCRIBE_MODEL,
       response_format: "text",
     });
     const text = typeof response === "string" ? response : (response as { text: string }).text;
