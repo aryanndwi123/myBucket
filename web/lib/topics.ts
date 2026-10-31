@@ -5,6 +5,8 @@ import type { SaveItem } from "./types";
 export interface Topic {
   slug: string;
   name: string;
+  /** The tag the topic is built on; empty for the leftovers bucket. */
+  tag: string;
   saves: SaveItem[];
 }
 
@@ -51,8 +53,8 @@ export function topicsOf(saves: SaveItem[]): { topics: Topic[]; other: Topic } {
   }
 
   return {
-    topics: ranked.map((t) => ({ slug: slugify(t), name: label(t), saves: buckets.get(t)!.sort(newestFirst) })),
-    other: { slug: OTHER_SLUG, name: OTHER_NAME, saves: rest.sort(newestFirst) },
+    topics: ranked.map((t) => ({ slug: slugify(t), name: label(t), tag: t, saves: buckets.get(t)!.sort(newestFirst) })),
+    other: { slug: OTHER_SLUG, name: OTHER_NAME, tag: "", saves: rest.sort(newestFirst) },
   };
 }
 

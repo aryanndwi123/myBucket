@@ -40,7 +40,8 @@ interface Props {
   /** Mobile drawer state; ignored from `lg` up where the sidebar is always visible. */
   open: boolean;
   onClose: () => void;
-  onLogout: () => void;
+  /** Null while sign-in is automatic. */
+  onLogout: (() => void) | null;
 }
 
 const NAV = [
@@ -176,9 +177,11 @@ export function Sidebar({ pathname, username, folders, counts, activeFolder, rec
               <span className="sr-only">Signed in as </span>
               {username}
             </p>
-            <Button variant="ghost" size="sm" onClick={onLogout}>
-              Log out
-            </Button>
+            {onLogout && (
+              <Button variant="ghost" size="sm" onClick={onLogout}>
+                Log out
+              </Button>
+            )}
           </div>
         </div>
       </aside>

@@ -3,9 +3,10 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useNow } from "@/hooks/useNow";
-import { FOLDERS, FOLDER_SUBS } from "@/lib/data";
-import { saveHref } from "@/lib/folders";
+import { folderFromSlug, saveHref, slugify } from "@/lib/folders";
+import { topicsOf } from "@/lib/topics";
 import { extractUrl } from "@/lib/utils";
+import { useAuth } from "@/components/auth/AuthGate";
 import { MenuIcon } from "@/components/ui/icons";
 import { useSavesContext } from "./SavesProvider";
 import { Sidebar, type Recap, type SidebarCounts } from "./Sidebar";
@@ -19,33 +20,40 @@ const isTyping = (target: EventTarget | null) =>
  * and pasting a link anywhere (outside an input) saves it.
  */
 export function AppShell({ children }: { children: ReactNode }) {
-  const { items, say, saveLink } = useSavesContext();
+  const { items, folders, saveLink } = useSavesContext();
+  const { user, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
   const now = useNow();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const { counts, recap } = useMemo(() => {
-    const live = items.filter((x) => !x.archived);
-    const folders = Object.fromEntries(FOLDERS.map((f) => [f, live.filter((x) => x.folder === f).length]));
-    const subs = Object.fromEntries(
-      FOLDERS.map((f) => [f, Object.fromEntries(FOLDER_SUBS[f].map((s) => [s, live.filter((x) => x.folder === f && x.subcategory === s).length]))]),
-    );
+  const realFolders = useMemo(() => folders.filter((f) => !f.isInbox), [folders]);
+
+  const { counts, recap, activeFolder } = useMemo(() => {
+    const byFolder = Object.fromEntries(realFolders.map((f) => [f.name, items.filter((x) => x.folders.includes(f.name))]));
     const counts: SidebarCounts = {
-      today: live.filter((x) => x.due && !x.finished).length,
-      all: live.length,
-      inbox: live.filter((x) => x.folder === "Inbox").length,
-      folders,
-      subs,
+      all: items.length,
+      inbox: items.filter((x) => x.folders.includes("Inbox")).length,
+      folders: Object.fromEntries(Object.entries(byFolder).map(([n, list]) => [n, list.length])),
     };
+
+    const month = now ? new Date(now.getFullYear(), now.getMonth(), 1).getTime() : 0;
+    const actions = items.flatMap((x) => x.actions);
     const recap: Recap = {
       month: now ? now.toLocaleDateString("en-US", { month: "long" }) : "This month",
-      saved: live.length,
-      used: live.filter((x) => x.finished).length,
-      topFolders: [...FOLDERS].sort((a, b) => folders[b] - folders[a]).filter((f) => folders[f] > 0).slice(0, 2),
+      saved: items.filter((x) => x.createdAt >= month).length,
+      todosDone: actions.filter((a) => a.done).length,
+      todosTotal: actions.length,
+      topFolders: [...realFolders].sort((a, b) => counts.folders[b.name] - counts.folders[a.name]).filter((f) => counts.folders[f.name] > 0).slice(0, 2).map((f) => f.name),
     };
-    return { counts, recap };
-  }, [items, now]);
+
+    const slug = pathname.startsWith("/folders/") ? pathname.split("/")[2] : null;
+    const current = slug ? folderFromSlug(realFolders, slug) : null;
+    const activeFolder = current
+      ? { name: current.name, topics: topicsOf(byFolder[current.name] ?? []).topics.map((t) => ({ slug: t.slug, name: t.name, count: t.saves.length })) }
+      : null;
+    return { counts, recap, activeFolder };
+  }, [items, realFolders, now, pathname]);
 
   // The drawer is only a mobile affordance; close it whenever the route changes.
   useEffect(() => setMenuOpen(false), [pathname]);
@@ -93,11 +101,14 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <Sidebar
         pathname={pathname}
+        username={user.username}
+        folders={realFolders}
         counts={counts}
+        activeFolder={activeFolder}
         recap={recap}
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
-        onShareRecap={() => say("Recap card", "Sharing is coming soon")}
+        onLogout={logout}
       />
 
       <div className="min-w-0 flex-1">
