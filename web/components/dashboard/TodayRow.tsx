@@ -31,7 +31,7 @@ export function TodayRow({ items, showEmpty, onOpen, onDone, onSnooze }: Props) 
       ) : (
         <ul className="mt-4 grid grid-cols-[repeat(auto-fill,minmax(260px,300px))] gap-4">
           {items.map((item) => (
-            <li key={item.id} className="relative animate-rise rounded-3xl border border-line bg-card py-5 pr-5 pl-7">
+            <li key={item.id} className="relative flex animate-rise flex-col items-start rounded-3xl border border-line bg-card py-5 pr-5 pl-7">
               <span
                 aria-hidden="true"
                 className="absolute top-4 bottom-4 left-3.5 w-1 rounded-full"
@@ -48,7 +48,7 @@ export function TodayRow({ items, showEmpty, onOpen, onDone, onSnooze }: Props) 
                 {item.title}
               </button>
               <p className="mt-2 text-sm leading-snug text-ink-3">{item.why}</p>
-              <div className="mt-4 flex gap-2">
+              <div className="mt-auto flex gap-2 pt-4">
                 <Button size="sm" onClick={() => onDone(item.id)}>
                   Done
                 </Button>

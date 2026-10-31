@@ -50,12 +50,12 @@ export function Sidebar({ view, folder, counts, recap, open, onClose, onView, on
       <aside
         aria-label="Navigation"
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-[272px] flex-col gap-6 overflow-y-auto border-r border-line bg-paper px-5 py-6",
+          "fixed inset-y-0 left-0 z-50 flex w-[272px] flex-col gap-6 overflow-y-auto border-r border-line bg-paper px-4 py-6",
           "lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-[232px] lg:shrink-0 lg:self-start lg:visible lg:translate-x-0",
           open ? "visible translate-x-0 animate-slide-in-left" : "invisible -translate-x-full",
         )}
       >
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-3">
             <span className="grid size-9 place-items-center rounded-[10px] bg-ember font-serif text-xl text-white">S</span>
             <span className="font-serif text-[30px] leading-none">Stashd</span>
@@ -99,8 +99,8 @@ export function Sidebar({ view, folder, counts, recap, open, onClose, onView, on
 
         <section aria-label={`${recap.month} recap`} className="mt-auto rounded-3xl bg-ink p-5 text-on-ink">
           <p className="font-mono text-[11px] tracking-[0.14em] text-ember-soft uppercase">{recap.month} recap</p>
-          <p className="mt-3 font-serif text-[30px] leading-[1.05]">
-            {recap.saved} saved, <em className="text-ember-soft">{recap.used} used</em>.
+          <p className="mt-3 font-serif text-[28px] leading-[1.05]">
+            {recap.saved} saved, <em className="whitespace-nowrap text-ember-soft">{recap.used} used</em>.
           </p>
           <p className="mt-3 text-sm leading-snug text-on-ink-muted">
             {recap.topFolders.length > 0 && <>Mostly {recap.topFolders.join(" and ")}. </>}
