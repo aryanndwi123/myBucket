@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+/*
+ * Stashd design tokens.
+ * Warm paper grounds + ink text. Ember orange is reserved for the next action.
+ * Folder tints are content colour, never used for buttons.
+ */
+@theme {
+  /* Grounds */
+  --color-paper: #f6f1e8;
+  --color-card: #fffdf9;
+  --color-sunken: #eee6d8;
+  --color-line: #e3d8c6;
+  --color-line-strong: #d6c8b2;
+
+  /* Text */
+  --color-ink: #1f1a15;
+  --color-ink-2: #3a3129;
+  --color-ink-3: #574c42; /* secondary text, 7:1 on paper */
+  --color-ink-4: #6e6359; /* meta text, 5:1 on paper */
+  --color-on-ink: #f6f1e8;
+  --color-on-ink-muted: #cfc4b4;
+  --color-ink-border: #4a4038;
+
+  /* Ember (action) */
+  --color-ember: #c94f1c; /* 4.8:1 with white */
+  --color-ember-bright: #e8692c; /* decoration only */
+  --color-ember-soft: #f4a274;
+  --color-ember-text: #a8421a; /* orange text on paper */
+  --color-ember-deep: #7e3112;
+  --color-ember-tint: #fbe2d0;
+
+  /* Fonts (wired from next/font in app/layout.tsx) */
+  --font-serif: var(--font-instrument-serif), Georgia, serif;
+  --font-sans: var(--font-geist), system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  /* Motion */
+  --animate-pulse-soft: pulse-soft 1.3s ease-in-out infinite;
+  --animate-rise: rise 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-toast: toast 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-slide-in: slide-in 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-slide-in-left: slide-in-left 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-fade-in: fade-in 0.2s ease-out;
+
+  @keyframes pulse-soft {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes toast {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateX(24px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes slide-in-left {
+    from { opacity: 0; transform: translateX(-24px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
+
+@layer base {
+  html,
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+  }
+  body {
+    font-family: var(--font-sans);
+    font-size: 15px;
+    line-height: 1.4;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::placeholder {
+    color: #7a6e62;
+  }
+  button {
+    cursor: pointer;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
