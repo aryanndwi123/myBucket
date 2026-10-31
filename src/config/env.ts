@@ -17,6 +17,10 @@ const envSchema = z.object({
   TRANSCRIBE_MODEL: z.string().default("whisper-large-v3-turbo"),
 
   YTDLP_PATH: z.string().default("yt-dlp"),
+  // Dir containing the ffmpeg binary; passed to yt-dlp as --ffmpeg-location.
+  // Needed when yt-dlp falls back to a combined video+audio stream that
+  // requires remuxing. Empty means "let yt-dlp find ffmpeg on PATH".
+  FFMPEG_LOCATION: z.string().default(""),
   // yt-dlp/transcription can hang on a bad reel; this caps how long we wait.
   REEL_PROCESSING_TIMEOUT_MS: z.coerce.number().default(30_000),
 

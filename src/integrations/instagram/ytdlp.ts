@@ -91,9 +91,11 @@ export async function downloadAudio(
         MAX_AUDIO_FILE_SIZE,
         "-f",
         "ba/b",
-        // No mp3 remux here: ffmpeg compression (if needed) is a separate step.
-        "--fixup",
-        "never",
+        // Instagram sometimes only offers a combined video+audio stream
+        // (no separate audio-only track); that fallback often arrives as a
+        // fragmented container that needs ffmpeg to fix up into something
+        // with a readable audio track, so fixup must stay on.
+        ...(env.FFMPEG_LOCATION ? ["--ffmpeg-location", env.FFMPEG_LOCATION] : []),
         "-o",
         outPattern,
         "--",
