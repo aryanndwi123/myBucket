@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { FOLDERS, FOLDER_TINT } from "@/lib/data";
+import { tintFor } from "@/lib/data";
 import type { FolderName, SaveItem } from "@/lib/types";
 import { kindLabel } from "@/lib/utils";
 import { ArrowUpRightIcon, CloseIcon } from "@/components/ui/icons";
@@ -7,6 +7,7 @@ import { Button, Checkbox, Chip, Spinner, Tag } from "@/components/ui/primitives
 
 interface Props {
   item: SaveItem;
+  folders: string[];
   onClose: () => void;
   onToggleAction: (index: number) => void;
   onMove: (folder: FolderName) => void;
@@ -26,7 +27,7 @@ function folderNote(item: SaveItem) {
  * Right-hand details. A sticky column from `xl` up; a full-height sheet on smaller screens
  * (the Dashboard renders the backdrop).
  */
-export function DetailPanel({ item, onClose, onToggleAction, onMove, onDone, onSnooze, onArchive }: Props) {
+export function DetailPanel({ item, folders, onClose, onToggleAction, onMove, onDone, onSnooze, onArchive }: Props) {
   const ref = useRef<HTMLElement>(null);
 
   // Move focus into the panel when a different save opens, so keyboard users land on it.
@@ -45,7 +46,7 @@ export function DetailPanel({ item, onClose, onToggleAction, onMove, onDone, onS
       aria-label="Save details"
       className="fixed inset-y-0 right-0 z-40 w-full max-w-[420px] animate-slide-in overflow-y-auto overscroll-contain bg-card shadow-2xl outline-none xl:sticky xl:top-6 xl:z-auto xl:max-h-[calc(100vh-3rem)] xl:w-[340px] xl:max-w-none xl:shrink-0 xl:self-start xl:rounded-[28px] xl:border xl:border-line xl:shadow-none"
     >
-      <div className="relative h-[150px]" style={{ background: processing ? "var(--color-sunken)" : FOLDER_TINT[item.folder] }}>
+      <div className="relative h-[150px]" style={{ background: processing ? "var(--color-sunken)" : tintFor(item.folder) }}>
         <span className="absolute top-4 left-4 rounded-md bg-white/85 px-2 py-1 font-mono text-[11px] leading-none">{kindLabel(item)}</span>
         <button
           type="button"
@@ -129,7 +130,7 @@ export function DetailPanel({ item, onClose, onToggleAction, onMove, onDone, onS
             <section aria-label="Folder" className="mt-4">
               <p className="text-[13px] leading-snug text-ink-3">{folderNote(item)}</p>
               <div className="mt-3 flex flex-wrap gap-2">
-                {FOLDERS.map((name) => (
+                {folders.map((name) => (
                   <Chip key={name} selected={item.folder === name} onClick={() => onMove(name)}>
                     {name}
                   </Chip>

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNow } from "@/hooks/useNow";
 import { useSaves } from "@/hooks/useSaves";
-import { FOLDERS, TYPE_FILTERS, USER } from "@/lib/data";
+import { TYPE_FILTERS } from "@/lib/data";
 import type { FolderName, TypeFilter, View } from "@/lib/types";
 import { detectMode, extractUrl, matchesFilter, matchesQuery } from "@/lib/utils";
 import { MenuIcon } from "@/components/ui/icons";
@@ -32,8 +32,8 @@ function dateLine(now: Date | null) {
   return `${weekday} · ${now.getDate()} ${month}`;
 }
 
-export function Dashboard() {
-  const { items, toast, ask, say, saveLink, markDone, snooze, archive, moveTo, toggleAction, askQuestion, clearAsk } = useSaves();
+export function Dashboard({ username }: { username: string }) {
+  const { items, folderNames, toast, ask, say, saveLink, markDone, snooze, archive, moveTo, toggleAction, askQuestion, clearAsk } = useSaves();
   const now = useNow();
 
   const [view, setView] = useState<View>("today");
@@ -53,9 +53,9 @@ export function Dashboard() {
     today: live.filter((x) => x.due && !x.finished).length,
     all: live.length,
     inbox: live.filter((x) => x.folder === "Inbox").length,
-    folders: Object.fromEntries(FOLDERS.map((f) => [f, live.filter((x) => x.folder === f).length])),
+    folders: Object.fromEntries(folderNames.map((f) => [f, live.filter((x) => x.folder === f).length])),
   };
-  const topFolders = [...FOLDERS].sort((a, b) => counts.folders[b] - counts.folders[a]).filter((f) => counts.folders[f] > 0).slice(0, 2);
+  const topFolders = [...folderNames].sort((a, b) => counts.folders[b] - counts.folders[a]).filter((f) => counts.folders[f] > 0).slice(0, 2);
   const recap = {
     month: now ? now.toLocaleDateString("en-US", { month: "long" }) : "This month",
     saved: live.length,
@@ -141,6 +141,7 @@ export function Dashboard() {
       <Sidebar
         view={view}
         folder={folder}
+        folders={folderNames}
         counts={counts}
         recap={recap}
         open={menuOpen}
@@ -175,7 +176,7 @@ export function Dashboard() {
             <div>
               <Eyebrow className="text-xs tracking-[0.12em]">{dateLine(now)}</Eyebrow>
               <h1 className="mt-2 font-serif text-5xl leading-[1.02] sm:text-[56px]">
-                {greeting(now)}, {USER.name}.
+                {greeting(now)}, {username}.
               </h1>
             </div>
             <p className="hidden text-sm text-ink-4 md:block">
@@ -248,6 +249,7 @@ export function Dashboard() {
                 <div className="fixed inset-0 z-30 animate-fade-in bg-ink/40 xl:hidden" onClick={() => setSelectedId(null)} aria-hidden="true" />
                 <DetailPanel
                   item={selected}
+                  folders={folderNames}
                   onClose={() => setSelectedId(null)}
                   onToggleAction={(i) => toggleAction(selected.id, i)}
                   onMove={(f) => moveTo(selected.id, f)}

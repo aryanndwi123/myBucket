@@ -1,4 +1,4 @@
-import { FOLDER_TINT } from "@/lib/data";
+import { tintFor } from "@/lib/data";
 import type { SaveItem } from "@/lib/types";
 import { cn, kindLabel } from "@/lib/utils";
 import { CheckIcon } from "@/components/ui/icons";
@@ -30,7 +30,7 @@ export function SaveCard({ item, selected, onOpen }: Props) {
         selected ? "border-ink ring-2 ring-ink" : "border-line",
       )}
     >
-      <span className="relative block h-32 shrink-0" style={{ background: processing ? "var(--color-sunken)" : FOLDER_TINT[item.folder] }}>
+      <span className="relative block h-32 shrink-0" style={{ background: processing ? "var(--color-sunken)" : tintFor(item.folder) }}>
         <span className={cn(badge, "left-3 bg-white/85 text-ink")}>{kindLabel(item)}</span>
         {review && <span className={cn(badge, "right-3 bg-ember-tint font-sans font-medium text-ember-text")}>Needs a look</span>}
         {item.finished && !review && (

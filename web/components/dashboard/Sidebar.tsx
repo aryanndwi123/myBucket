@@ -1,4 +1,4 @@
-import { FOLDERS, FOLDER_DOT, FOLDER_TINT } from "@/lib/data";
+import { dotFor, tintFor } from "@/lib/data";
 import type { FolderName, View } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { CloseIcon } from "@/components/ui/icons";
@@ -21,6 +21,7 @@ export interface Recap {
 interface Props {
   view: View;
   folder: FolderName | null;
+  folders: string[];
   counts: SidebarCounts;
   recap: Recap;
   /** Mobile drawer state; ignored from `lg` up where the sidebar is always visible. */
@@ -34,7 +35,7 @@ interface Props {
 const NAV: { view: View; label: string; dot: string; count: (c: SidebarCounts) => number }[] = [
   { view: "today", label: "Today", dot: "var(--color-ember)", count: (c) => c.today },
   { view: "all", label: "All saves", dot: "var(--color-ink)", count: (c) => c.all },
-  { view: "inbox", label: "Inbox", dot: FOLDER_DOT.Inbox, count: (c) => c.inbox },
+  { view: "inbox", label: "Inbox", dot: dotFor("Inbox"), count: (c) => c.inbox },
 ];
 
 const rowClass = (active: boolean) =>
@@ -43,7 +44,7 @@ const rowClass = (active: boolean) =>
     active ? "bg-sunken font-semibold" : "hover:bg-sunken/60",
   );
 
-export function Sidebar({ view, folder, counts, recap, open, onClose, onView, onFolder, onShareRecap }: Props) {
+export function Sidebar({ view, folder, folders, counts, recap, open, onClose, onView, onFolder, onShareRecap }: Props) {
   return (
     <>
       {open && <div className="fixed inset-0 z-40 animate-fade-in bg-ink/40 lg:hidden" onClick={onClose} aria-hidden="true" />}
@@ -85,11 +86,11 @@ export function Sidebar({ view, folder, counts, recap, open, onClose, onView, on
 
         <nav aria-label="Folders" className="flex flex-col gap-1">
           <Eyebrow className="mb-2 px-3">Folders</Eyebrow>
-          {FOLDERS.map((name) => {
+          {folders.map((name) => {
             const active = folder === name;
             return (
               <button key={name} type="button" onClick={() => onFolder(name)} aria-current={active ? "page" : undefined} className={rowClass(active)}>
-                <span className="size-6 rounded-md" style={{ background: FOLDER_TINT[name] }} />
+                <span className="size-6 rounded-md" style={{ background: tintFor(name) }} />
                 <span className="flex-1">{name}</span>
                 <span className="text-sm font-normal text-ink-4 tabular-nums">{counts.folders[name] ?? 0}</span>
               </button>

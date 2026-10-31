@@ -1,5 +1,5 @@
 import type { AskState } from "@/hooks/useSaves";
-import { FOLDER_DOT } from "@/lib/data";
+import { dotFor } from "@/lib/data";
 import type { SaveItem } from "@/lib/types";
 import { Eyebrow, Spinner } from "@/components/ui/primitives";
 
@@ -46,7 +46,7 @@ export function AskAnswer({ state, items, onOpen }: Props) {
                       {item.folder} · saved {item.saved}
                     </span>
                   </span>
-                  <span className="size-2.5 shrink-0 rounded-full" style={{ background: FOLDER_DOT[item.folder] }} />
+                  <span className="size-2.5 shrink-0 rounded-full" style={{ background: dotFor(item.folder) }} />
                 </button>
               </li>
             ))}
