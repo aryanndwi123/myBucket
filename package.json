@@ -1,0 +1,22 @@
+{
+  "name": "mybucket",
+  "version": "0.1.0",
+  "description": "Unified bucket for saved social content (Twitter, Instagram, LinkedIn), auto-categorized with OpenAI",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "start": "node dist/index.js",
+    "lint": "eslint src --ext .ts"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "openai": "^4.68.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.7.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2"
+  }
+}
