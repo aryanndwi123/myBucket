@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Instrument_Serif } from "next/font/google";
-import { SavesProvider } from "@/components/app/SavesProvider";
 import "./globals.css";
 
 const instrumentSerif = Instrument_Serif({
@@ -24,9 +23,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${instrumentSerif.variable} ${geist.variable} ${geistMono.variable}`}>
-      <body>
-        <SavesProvider>{children}</SavesProvider>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

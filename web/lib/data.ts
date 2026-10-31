@@ -41,4 +41,4 @@ export function dotFor(name: string): string {
   return FOLDER_DOT[name] ?? DOT_PALETTE[hashIndex(name, DOT_PALETTE.length)];
 }
 
-export const TYPE_FILTERS: TypeFilter[] = ["All types", "Reels", "X", "LinkedIn", "YouTube", "To try", "To learn", "To apply"];
+export const TYPE_FILTERS: TypeFilter[] = ["All types", "Reels", "X", "To try", "To learn", "To apply"];

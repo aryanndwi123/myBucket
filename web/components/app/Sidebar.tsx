@@ -1,40 +1,52 @@
 import Link from "next/link";
-import { FOLDERS, FOLDER_DOT, FOLDER_SUBS, FOLDER_TINT } from "@/lib/data";
-import { folderHref, subHref } from "@/lib/folders";
+import { dotFor, tintFor } from "@/lib/data";
+import { folderHref, topicHref } from "@/lib/folders";
+import type { Folder } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { CloseIcon } from "@/components/ui/icons";
 import { Button, Eyebrow } from "@/components/ui/primitives";
 
 export interface SidebarCounts {
-  today: number;
   all: number;
   inbox: number;
+  /** folder name → saves in it */
   folders: Record<string, number>;
-  /** folder → subcategory → count */
-  subs: Record<string, Record<string, number>>;
 }
 
 export interface Recap {
   month: string;
+  /** Saves added this month. */
   saved: number;
-  used: number;
+  todosDone: number;
+  todosTotal: number;
   topFolders: string[];
+}
+
+export interface SidebarTopic {
+  slug: string;
+  name: string;
+  count: number;
 }
 
 interface Props {
   pathname: string;
+  username: string;
+  /** Real (non-Inbox) folders, in the order the API returns them. */
+  folders: Folder[];
   counts: SidebarCounts;
+  /** Topics of the folder the user is in, shown nested under it. */
+  activeFolder: { name: string; topics: SidebarTopic[] } | null;
   recap: Recap;
   /** Mobile drawer state; ignored from `lg` up where the sidebar is always visible. */
   open: boolean;
   onClose: () => void;
-  onShareRecap: () => void;
+  onLogout: () => void;
 }
 
 const NAV = [
-  { href: "/", label: "Today", dot: "var(--color-ember)", count: (c: SidebarCounts) => c.today },
+  { href: "/", label: "Home", dot: "var(--color-ember)", count: null },
   { href: "/all", label: "All saves", dot: "var(--color-ink)", count: (c: SidebarCounts) => c.all },
-  { href: "/inbox", label: "Inbox", dot: FOLDER_DOT.Inbox, count: (c: SidebarCounts) => c.inbox },
+  { href: "/inbox", label: "Inbox", dot: dotFor("Inbox"), count: (c: SidebarCounts) => c.inbox },
 ];
 
 const rowClass = (active: boolean) =>
@@ -43,7 +55,7 @@ const rowClass = (active: boolean) =>
     active ? "bg-sunken font-semibold" : "hover:bg-sunken/60",
   );
 
-export function Sidebar({ pathname, counts, recap, open, onClose, onShareRecap }: Props) {
+export function Sidebar({ pathname, username, folders, counts, activeFolder, recap, open, onClose, onLogout }: Props) {
   return (
     <>
       {open && <div className="fixed inset-0 z-40 animate-fade-in bg-ink/40 lg:hidden" onClick={onClose} aria-hidden="true" />}
@@ -77,41 +89,43 @@ export function Sidebar({ pathname, counts, recap, open, onClose, onShareRecap }
               <Link key={n.href} href={n.href} aria-current={active ? "page" : undefined} className={rowClass(active)}>
                 <span className="size-2 rounded-full" style={{ background: n.dot }} />
                 <span className="flex-1">{n.label}</span>
-                <span className="text-sm font-normal text-ink-4 tabular-nums">{n.count(counts)}</span>
+                {n.count && <span className="text-sm font-normal text-ink-4 tabular-nums">{n.count(counts)}</span>}
               </Link>
             );
           })}
         </nav>
 
-        <nav aria-label="Categories" className="flex flex-col gap-1">
-          <Eyebrow className="mb-2 px-3">Categories</Eyebrow>
-          {FOLDERS.map((name) => {
-            const href = folderHref(name);
-            const inFolder = pathname === href || pathname.startsWith(`${href}/`);
+        <nav aria-label="Folders" className="flex flex-col gap-1">
+          <Eyebrow className="mb-2 px-3">Folders</Eyebrow>
+          {folders.length === 0 && <p className="px-3 text-sm text-ink-4">Folders appear here as Stashd files your saves.</p>}
+          {folders.map((f) => {
+            const href = folderHref(f.name);
+            const here = pathname === href;
+            const expanded = activeFolder?.name === f.name && activeFolder.topics.length > 0;
             return (
-              <div key={name}>
-                <Link href={href} aria-current={pathname === href ? "page" : undefined} className={rowClass(pathname === href)}>
-                  <span className="size-6 rounded-md" style={{ background: FOLDER_TINT[name] }} />
-                  <span className="flex-1">{name}</span>
-                  <span className="text-sm font-normal text-ink-4 tabular-nums">{counts.folders[name] ?? 0}</span>
+              <div key={f.id}>
+                <Link href={href} aria-current={here ? "page" : undefined} className={rowClass(here)}>
+                  <span className="size-6 rounded-md" style={{ background: tintFor(f.name) }} />
+                  <span className="flex-1 truncate">{f.name}</span>
+                  <span className="text-sm font-normal text-ink-4 tabular-nums">{counts.folders[f.name] ?? 0}</span>
                 </Link>
-                {inFolder && (
+                {expanded && (
                   <ul className="mt-1 mb-1 ml-[22px] flex flex-col gap-0.5 border-l border-line pl-3">
-                    {FOLDER_SUBS[name].map((sub) => {
-                      const subPath = subHref(name, sub);
-                      const active = pathname === subPath;
+                    {activeFolder.topics.map((t) => {
+                      const topicPath = topicHref(f.name, t.slug);
+                      const active = pathname === topicPath;
                       return (
-                        <li key={sub}>
+                        <li key={t.slug}>
                           <Link
-                            href={subPath}
+                            href={topicPath}
                             aria-current={active ? "page" : undefined}
                             className={cn(
                               "flex h-10 items-center gap-2 rounded-lg px-3 text-sm transition-colors sm:h-9",
                               active ? "bg-sunken font-semibold" : "text-ink-3 hover:bg-sunken/60 hover:text-ink",
                             )}
                           >
-                            <span className="flex-1 truncate">{sub}</span>
-                            <span className="text-xs text-ink-4 tabular-nums">{counts.subs[name]?.[sub] ?? 0}</span>
+                            <span className="flex-1 truncate">{t.name}</span>
+                            <span className="text-xs text-ink-4 tabular-nums">{t.count}</span>
                           </Link>
                         </li>
                       );
@@ -126,28 +140,47 @@ export function Sidebar({ pathname, counts, recap, open, onClose, onShareRecap }
         <nav aria-label="More pages" className="flex flex-col gap-1">
           <Eyebrow className="mb-2 px-3">More</Eyebrow>
           <Link href="/recipes" aria-current={pathname === "/recipes" ? "page" : undefined} className={rowClass(pathname === "/recipes")}>
-            <span className="size-2 rounded-full" style={{ background: FOLDER_DOT.Recipes }} />
+            <span className="size-2 rounded-full" style={{ background: dotFor("Recipes") }} />
             <span className="flex-1">Recipes summary</span>
           </Link>
           <Link href="/backend" aria-current={pathname === "/backend" ? "page" : undefined} className={rowClass(pathname === "/backend")}>
             <span className="size-2 rounded-full" style={{ background: "var(--color-ink)" }} />
             <span className="flex-1">Backend</span>
           </Link>
+          <Link href="/settings" aria-current={pathname === "/settings" ? "page" : undefined} className={rowClass(pathname === "/settings")}>
+            <span className="size-2 rounded-full" style={{ background: "var(--color-ink-4)" }} />
+            <span className="flex-1">Settings</span>
+          </Link>
         </nav>
 
-        <section aria-label={`${recap.month} recap`} className="mt-auto rounded-3xl bg-ink p-5 text-on-ink">
-          <p className="font-mono text-[11px] tracking-[0.14em] text-ember-soft uppercase">{recap.month} recap</p>
-          <p className="mt-3 font-serif text-[28px] leading-[1.05]">
-            {recap.saved} saved, <em className="whitespace-nowrap text-ember-soft">{recap.used} used</em>.
-          </p>
-          <p className="mt-3 text-sm leading-snug text-on-ink-muted">
-            {recap.topFolders.length > 0 && <>Mostly {recap.topFolders.join(" and ")}. </>}
-            Your best week for actually trying things.
-          </p>
-          <Button variant="dark-outline" size="sm" className="mt-4" onClick={onShareRecap}>
-            Share card
-          </Button>
-        </section>
+        <div className="mt-auto flex flex-col gap-4">
+          <section aria-label={`${recap.month} recap`} className="rounded-3xl bg-ink p-5 text-on-ink">
+            <p className="font-mono text-[11px] tracking-[0.14em] text-ember-soft uppercase">{recap.month} recap</p>
+            <p className="mt-3 font-serif text-[28px] leading-[1.05]">
+              {recap.saved} saved
+              {recap.todosTotal > 0 && (
+                <>
+                  , <em className="whitespace-nowrap text-ember-soft">{recap.todosDone} done</em>
+                </>
+              )}
+              .
+            </p>
+            <p className="mt-3 text-sm leading-snug text-on-ink-muted">
+              {recap.todosTotal > 0 && `${recap.todosDone} of ${recap.todosTotal} to-dos ticked off. `}
+              {recap.topFolders.length > 0 && <>Mostly {recap.topFolders.join(" and ")}.</>}
+            </p>
+          </section>
+
+          <div className="flex items-center justify-between gap-2 px-1">
+            <p className="min-w-0 truncate text-sm text-ink-3">
+              <span className="sr-only">Signed in as </span>
+              {username}
+            </p>
+            <Button variant="ghost" size="sm" onClick={onLogout}>
+              Log out
+            </Button>
+          </div>
+        </div>
       </aside>
     </>
   );

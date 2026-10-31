@@ -10,7 +10,6 @@ export interface Digest {
   /** Most used tags first. */
   tags: string[];
   todos: { done: number; total: number };
-  dueToday: number;
 }
 
 /** First sentence, without its closing full stop. */
@@ -22,12 +21,12 @@ export function firstSentence(text: string): string {
 const MAX_OVERVIEW = 260;
 
 /**
- * Builds a subcategory summary from the saves in it: the lead sentence of each save's own summary.
- * This is the stand-in for one small LLM call per subcategory (see the Backend page), which would
- * read the same inputs and write a real paragraph.
+ * Builds a summary of a group of saves: the lead sentence of each save's own summary, newest first.
+ * Stand-in for one small LLM call per folder or topic, which would read the same inputs
+ * and write a real paragraph.
  */
 export function digest(saves: SaveItem[]): Digest {
-  const ordered = [...saves].filter((x) => x.status !== "processing").sort(newestFirst);
+  const ordered = saves.filter((x) => x.status !== "processing").sort(newestFirst);
 
   const points = ordered.map((x) => ({ id: x.id, title: x.title, text: firstSentence(x.summary) })).filter((p) => p.text);
 
@@ -51,6 +50,5 @@ export function digest(saves: SaveItem[]): Digest {
     points,
     tags,
     todos: { done: actions.filter((a) => a.done).length, total: actions.length },
-    dueToday: ordered.filter((x) => x.due && !x.finished).length,
   };
 }

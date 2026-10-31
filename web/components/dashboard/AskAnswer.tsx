@@ -1,19 +1,14 @@
 import Link from "next/link";
 import type { AskState } from "@/hooks/useSaves";
 import { dotFor } from "@/lib/data";
-import type { SaveItem } from "@/lib/types";
+import { saveHref } from "@/lib/folders";
 import { Eyebrow, Spinner } from "@/components/ui/primitives";
 
-interface Props {
-  state: AskState;
-  items: SaveItem[];
-}
-
-/** Answer card for "ask" mode. The answer is built from keyword matches until POST /api/ask exists. */
-export function AskAnswer({ state, items }: Props) {
+/** Answer card for "ask" mode. The answer is built from keyword matches until the AI answer ships. */
+export function AskAnswer({ state }: { state: AskState }) {
   if (state.mode === "idle") return null;
 
-  const cited = state.mode === "done" ? state.ids.map((id) => items.find((x) => x.id === id)).filter((x): x is SaveItem => !!x) : [];
+  const cited = state.mode === "done" ? state.items : [];
 
   return (
     <section aria-label="Answer" className="mt-8 animate-rise rounded-3xl border border-line bg-card p-6">
@@ -25,7 +20,7 @@ export function AskAnswer({ state, items }: Props) {
           <Spinner /> Looking through your saves…
         </p>
       ) : cited.length === 0 ? (
-        <p className="mt-4 text-ink-2">I couldn’t find a save that matches that. Try different words, or search by folder.</p>
+        <p className="mt-4 text-ink-2">I couldn’t find a save that matches that. Try different words, or browse a folder.</p>
       ) : (
         <>
           <p className="mt-4 text-[15px] leading-relaxed text-ink-2">
@@ -42,22 +37,17 @@ export function AskAnswer({ state, items }: Props) {
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium">{item.title}</span>
                     <span className="block text-xs text-ink-4">
-                      {item.folder} · saved {item.saved}
+                      {[item.folder, `saved ${item.saved}`].filter(Boolean).join(" · ")}
                     </span>
                   </span>
-<<<<<<< HEAD
-                  <span className="size-2.5 shrink-0 rounded-full" style={{ background: FOLDER_DOT[item.folder] }} />
+                  <span className="size-2.5 shrink-0 rounded-full" style={{ background: dotFor(item.folder || "Inbox") }} />
                 </Link>
-=======
-                  <span className="size-2.5 shrink-0 rounded-full" style={{ background: dotFor(item.folder) }} />
-                </button>
->>>>>>> c2d9ecc6e9e30d2816a5139f627a83387a5537c0
               </li>
             ))}
           </ol>
         </>
       )}
-      <p className="mt-4 font-mono text-[11px] text-ink-4">Preview · matched on keywords, not an AI answer yet</p>
+      <p className="mt-4 font-mono text-[11px] text-ink-4">Matched on keywords, not an AI answer yet</p>
     </section>
   );
 }

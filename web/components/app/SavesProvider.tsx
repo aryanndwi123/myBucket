@@ -9,9 +9,9 @@ type SavesContextValue = ReturnType<typeof useSaves>;
 const SavesContext = createContext<SavesContextValue | null>(null);
 
 /**
- * Holds save state above the routes, so moving between a category, a subcategory and a save
- * keeps everything (including saves still processing) instead of resetting per page.
- * Also owns the toast, which any route can trigger.
+ * Holds save and folder state above the routes, so moving between a folder, a topic and a save keeps
+ * everything (including saves still processing) instead of refetching per page.
+ * Also owns the toast, which any route can trigger. Mounted only once there is a session.
  */
 export function SavesProvider({ children }: { children: ReactNode }) {
   const saves = useSaves();
