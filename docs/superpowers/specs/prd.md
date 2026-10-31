@@ -481,3 +481,29 @@ TypeScript worker is faster than writing fresh:
 - **Host allow-listing** (`validateHost`/`allowedHosts`) — pins extraction to each
   platform's known domains, preventing the ingestion endpoint from becoming an open
   URL-fetch proxy for arbitrary links.
+
+Addendum 2 — no separate background worker (31 Oct 2026)
+
+The PRD's "API only saves and queues, Agenda.js worker processes it, SSE pushes updates"
+design is dropped. There is no second deployable process. `POST /api/items` runs extraction
+(yt-dlp/transcription or oEmbed) and OpenAI classification synchronously, in the same
+request, the same way the Instagram extractor already built in `src/integrations/instagram`
+works — the request simply stays open until processing finishes and returns the finished
+item. Consequences:
+- `agendaJobs` collection, Agenda.js, and `/api/events` (SSE) are all removed from scope.
+- Only one Render service is needed (a single web service), not a web + background-worker
+  pair.
+- `status: "processing"` still exists for failure/retry bookkeeping, but in practice an item
+  reaches `"ready"` or `"failed"` before the HTTP response is sent — the frontend doesn't
+  need to poll or listen for a later update under normal operation.
+- Accepted trade-off: a slow Instagram transcription keeps the request open for several
+  seconds. Fine for this project's expected usage; revisit only if that becomes a real
+  problem.
+
+Addendum 3 — search stays simple, MCP server still built (31 Oct 2026)
+
+Atlas Vector Search / embeddings and hybrid RRF search are dropped for now. Search is plain
+word/substring matching over each item's title, caption, and transcript (e.g. a MongoDB text
+index or a simple case-insensitive regex match) — "Ask my saves" and semantic search are
+deferred. The MCP server is still in scope and still exposes `search_saves` per the table
+above; it just calls the simple word-match search instead of hybrid vector search.
